@@ -43,6 +43,7 @@
 #if MYNEWT_VAL(DW1000_DEVICE_0)
 /* Needed for DMA transfer operations */
 static const uint8_t tx_buffer[MYNEWT_VAL(DW1000_HAL_SPI_BUFFER_SIZE)] __attribute__ ((aligned (8))) = {0};
+static const uint8_t rx_buffer[MYNEWT_VAL(DW1000_HAL_SPI_BUFFER_SIZE)] __attribute__ ((aligned (8))) = {0};
 
 static dw1000_dev_instance_t hal_dw1000_instances[]= {
     #if  MYNEWT_VAL(DW1000_DEVICE_0)
@@ -140,13 +141,13 @@ static dw1000_dev_instance_t hal_dw1000_instances[]= {
                 .dataRate = DWT_BR_6M8,             //!< Data rate. 
                 .rx = {
                     .pacLength = DWT_PAC8,          //!< Acquisition Chunk Size (Relates to RX preamble length)
-                    .preambleCodeIndex = 9,         //!< RX preamble code
+                    .preambleCodeIndex = 6,         //!< RX preamble code
                     .sfdType = 0,                   //!< Boolean should we use non-standard SFD for better performance
                     .phrMode = DWT_PHRMODE_STD,     //!< PHR mode {0x0 - standard DWT_PHRMODE_STD, 0x3 - extended frames DWT_PHRMODE_EXT}
                     .sfdTimeout = (128 + 1 + 8 - 8) //!< SFD timeout value (in symbols) (preamble length + 1 + SFD length - PAC size). Used in RX only. 
                 },
                 .tx ={
-                    .preambleCodeIndex = 9,         //!< TX preamble code
+                    .preambleCodeIndex = 6,         //!< TX preamble code
                     .preambleLength = DWT_PLEN_128  //!< DWT_PLEN_64..DWT_PLEN_4096
                 },
                 .txrf={
@@ -304,9 +305,10 @@ hal_dw1000_read(struct _dw1000_dev_instance_t * inst,
     assert(inst->spi_sem);
     err = os_sem_pend(inst->spi_sem, OS_TIMEOUT_NEVER);
     assert(err == OS_OK);
+    uint8_t rx_buff[cmd_size + 1];
     hal_gpio_write(inst->ss_pin, 0);
 
-    hal_spi_txrx(inst->spi_num, (void*)cmd, 0, cmd_size);
+    hal_spi_txrx(inst->spi_num, (void*)cmd, (void *)rx_buff, cmd_size);
     for(uint16_t i = 0; i < length; i++)
         buffer[i] = hal_spi_tx_val(inst->spi_num, 0);
 
@@ -361,11 +363,12 @@ hal_dw1000_read_noblock(struct _dw1000_dev_instance_t * inst, const uint8_t * cm
 
     err = os_sem_pend(inst->spi_sem, OS_TIMEOUT_NEVER);
     assert(err == OS_OK);
+    uint8_t rx_buff[cmd_size + 1];
     
     hal_gpio_write(inst->ss_pin, 0);
 
     /* Send command portion */
-    hal_spi_txrx(inst->spi_num, (void*)cmd, 0, cmd_size);
+    hal_spi_txrx(inst->spi_num, (void*)cmd, (void *)rx_buff, cmd_size);
 
     /* Nonblocking reads can only do a maximum of 255 bytes at a time. And
      * not read more than what can fit in the tx_buffer at a time. */
@@ -427,18 +430,18 @@ hal_dw1000_write(struct _dw1000_dev_instance_t * inst, const uint8_t * cmd, uint
     assert(inst->spi_sem);
     err = os_sem_pend(inst->spi_sem, OS_TIMEOUT_NEVER);
     assert(err == OS_OK);
+    uint8_t rx_buff[length + 1];
 
     hal_gpio_write(inst->ss_pin, 0);
 
-    hal_spi_txrx(inst->spi_num, (void*)cmd, 0, cmd_size);
-    hal_spi_txrx(inst->spi_num, (void*)buffer, 0, length);
+    hal_spi_txrx(inst->spi_num, (void*)cmd, (void *)rx_buff, cmd_size);
+    hal_spi_txrx(inst->spi_num, (void*)buffer, (void *)rx_buff, length);
      
     hal_gpio_write(inst->ss_pin, 1);
 
     err = os_sem_release(inst->spi_sem);
     assert(err == OS_OK);
 }
-
 
 /**
  * API to perform a nonblocking write over SPI
@@ -459,9 +462,9 @@ hal_dw1000_write_noblock(struct _dw1000_dev_instance_t * inst, const uint8_t * c
     assert(inst->spi_sem);
     err = os_sem_pend(inst->spi_sem, OS_TIMEOUT_NEVER);
     assert(err == OS_OK);
-
+    uint8_t rx_buff[cmd_size + 1];
     hal_gpio_write(inst->ss_pin, 0);
-    rc = hal_spi_txrx(inst->spi_num, (void*)cmd, 0, cmd_size);
+    hal_spi_txrx(inst->spi_num, (void*)cmd, (void *)rx_buff, cmd_size);
     assert(rc==OS_OK);
 
     /* Nonblocking writes can only do a maximum of 255 bytes at a time */
@@ -483,7 +486,7 @@ hal_dw1000_write_noblock(struct _dw1000_dev_instance_t * inst, const uint8_t * c
         assert(rc == OS_OK);
 
         rc = hal_spi_txrx_noblock(inst->spi_num, (void*)buffer+offset,
-                                  0, bytes_to_write);
+                                  (void *)rx_buffer, bytes_to_write);
         assert(rc==OS_OK);
 
         /* Only wait for this round if there is more data to read */
@@ -497,7 +500,6 @@ hal_dw1000_write_noblock(struct _dw1000_dev_instance_t * inst, const uint8_t * c
         }
     }
 }
-
 
 /**
  * API to wake dw1000 from sleep mode

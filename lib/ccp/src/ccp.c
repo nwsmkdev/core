@@ -159,7 +159,8 @@ ccp_timer_irq(void * arg){
  
     dw1000_dev_instance_t * inst = (dw1000_dev_instance_t *) arg;
     dw1000_ccp_instance_t * ccp = inst->ccp; 
-    os_eventq_put(&ccp->eventq, &ccp->event_cb.c_ev);
+//  os_eventq_put(&ccp->eventq, &ccp->event_cb.c_ev);
+    ccp_master_timer_ev_cb( &ccp->event_cb.c_ev);
 }
 
 
@@ -187,11 +188,14 @@ ccp_master_timer_ev_cb(struct os_event *ev) {
         hal_timer_start_at(&ccp->timer, ccp->os_epoch
             + os_cputime_usecs_to_ticks((uint32_t)dw1000_dwt_usecs_to_usecs(ccp->period) << 1)
         );    
-    }else{
+    }
+#if 0
+    else{
         hal_timer_start_at(&ccp->timer, ccp->os_epoch
             + os_cputime_usecs_to_ticks((uint32_t)dw1000_dwt_usecs_to_usecs(ccp->period))
         );
     }
+#endif
 }
 
 /** 
@@ -614,8 +618,8 @@ rx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
     }
 
     if (ccp->config.postprocess && ccp->status.valid) 
-        // os_eventq_put(&ccp->eventq, &ccp->callout_postprocess.c_ev);
-        os_eventq_put(os_eventq_dflt_get(), &ccp->callout_postprocess.c_ev);
+         os_eventq_put(&ccp->eventq, &ccp->callout_postprocess.c_ev);
+        //os_eventq_put(os_eventq_dflt_get(), &ccp->callout_postprocess.c_ev);
     
 #if MYNEWT_VAL(FS_XTALT_AUTOTUNE_ENABLED) 
     if (ccp->config.fs_xtalt_autotune && ccp->status.valid){
@@ -669,10 +673,14 @@ ccp_tx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t 
     ccp->period = frame->transmission_interval;
 
     if (ccp->status.timer_enabled){
-        hal_timer_start_at(&ccp->timer, ccp->os_epoch 
+#if 1
+      hal_timer_start_at(&ccp->timer, ccp->os_epoch
             - os_cputime_usecs_to_ticks(MYNEWT_VAL(OS_LATENCY)) 
             + os_cputime_usecs_to_ticks(dw1000_dwt_usecs_to_usecs(ccp->period))
         );
+#endif
+
+    //os_cputime_timer_relative(&ccp->timer, 1000000);
     }
     ccp->status.valid |= ccp->idx > 1;
     // Postprocess for tx_complete is used to generate tdma events on the clock master node. 
@@ -802,7 +810,7 @@ dw1000_ccp_send(struct _dw1000_dev_instance_t * inst, dw1000_dev_modes_t mode)
     dw1000_ccp_instance_t * ccp = inst->ccp; 
     os_error_t err = os_sem_pend(&ccp->sem, OS_TIMEOUT_NEVER);
     assert(err == OS_OK);
-    
+    hal_gpio_toggle(LED_3);
     ccp_frame_t * previous_frame = ccp->frames[(uint16_t)(ccp->idx)%ccp->nframes];
     ccp_frame_t * frame = ccp->frames[(ccp->idx+1)%ccp->nframes];
     
@@ -829,7 +837,7 @@ dw1000_ccp_send(struct _dw1000_dev_instance_t * inst, dw1000_dev_modes_t mode)
 
     }else if(mode == DWT_BLOCKING){
         err = os_sem_pend(&ccp->sem, OS_TIMEOUT_NEVER); // Wait for completion of transactions 
-        assert(err == OS_OK); 
+        //assert(err == OS_OK);
         err =  os_sem_release(&ccp->sem);
         assert(err == OS_OK); 
     }
@@ -920,7 +928,3 @@ dw1000_ccp_stop(dw1000_dev_instance_t * inst){
     dw1000_ccp_instance_t * ccp = inst->ccp; 
     os_cputime_timer_stop(&ccp->timer);
 }
-
-
-
-

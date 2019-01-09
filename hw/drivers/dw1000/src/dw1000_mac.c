@@ -1113,7 +1113,8 @@ dw1000_tasks_init(struct _dw1000_dev_instance_t * inst)
 static void 
 dw1000_irq(void *arg){
     dw1000_dev_instance_t * inst = arg;
-    os_eventq_put(&inst->eventq, &inst->interrupt_ev);   
+    //os_eventq_put(&inst->eventq, &inst->interrupt_ev);
+    dw1000_interrupt_ev_cb(&inst->interrupt_ev);
 }
 
 /**
@@ -1225,7 +1226,6 @@ dw1000_mac_get_interface(dw1000_dev_instance_t * inst, dw1000_extension_id_t id)
 static void 
 dw1000_interrupt_ev_cb(struct os_event *ev)
 {
-
     dw1000_dev_instance_t * inst = ev->ev_arg;
 
     inst->sys_status = dw1000_read_reg(inst, SYS_STATUS_ID, 0, sizeof(uint32_t)); // Read status register low 32bits
