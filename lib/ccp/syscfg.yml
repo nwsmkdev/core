@@ -12,7 +12,7 @@ syscfg.defs:
     CCP_PERIOD:
         description: >
             Clock Calibration Packets Period (dwt usec)
-        value: ((uint32_t)0x10000)
+        value: ((uint32_t)0x50000)
     FS_XTALT_AUTOTUNE_ENABLED: 
         description: >
             Autotune XTALT to Clock Master

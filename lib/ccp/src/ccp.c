@@ -159,8 +159,11 @@ ccp_timer_irq(void * arg){
  
     dw1000_dev_instance_t * inst = (dw1000_dev_instance_t *) arg;
     dw1000_ccp_instance_t * ccp = inst->ccp; 
-//  os_eventq_put(&ccp->eventq, &ccp->event_cb.c_ev);
-    ccp_master_timer_ev_cb( &ccp->event_cb.c_ev);
+//    os_eventq_put(&ccp->eventq, &ccp->event_cb.c_ev);
+    if (ccp->config.role == CCP_ROLE_MASTER)
+       ccp_master_timer_ev_cb(&ccp->event_cb.c_ev);
+    else
+        ccp_slave_timer_ev_cb(&ccp->event_cb.c_ev);
 }
 
 
@@ -523,6 +526,13 @@ ccp_postprocess(struct os_event * ev){
  * @param inst   Pointer to dw1000_dev_instance_t.  
  * @return void 
  */
+uint8_t csRxtime[5];
+uint8_t csTxtime[5];
+uint8_t seq_number;
+uint8_t ccp_tx;
+uint8_t ccp_rx;
+uint16_t firstPath;
+uint64_t ccp_master_address;
 static bool 
 rx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cbs)
 {
@@ -533,12 +543,13 @@ rx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
         }
         return false;
     }
- 
+#if 0 
     if(os_sem_get_count(&inst->ccp->sem) != 0){ 
         //unsolicited inbound
         STATS_INC(inst->ccp->stat, rx_unsolicited);
         return false;
     }
+#endif    
 
     if (inst->ccp->config.role == CCP_ROLE_MASTER) {
         return true;
@@ -574,7 +585,11 @@ rx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
     ccp->period = frame->transmission_interval;
     frame->carrier_integrator = inst->carrier_integrator;
     ccp->status.valid |= ccp->idx > 1;
-
+    memcpy(csRxtime,&frame->reception_timestamp,5);
+    seq_number = frame->seq_num;
+    firstPath = dw1000_read_reg(inst, RX_TIME_ID, RX_TIME_FP_INDEX_OFFSET, 2);
+    ccp_master_address = frame->long_address;
+    ccp_rx = 1;
     /* Compensate if not receiving the master ccp packet directly */
     int rx_slot = (frame->long_address & 0xff);
     if (rx_slot != 0x00) {
@@ -616,10 +631,11 @@ rx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
             STATS_INC(inst->ccp->stat, tx_relay_ok);
         }
     }
-
+#if 0
     if (ccp->config.postprocess && ccp->status.valid) 
          os_eventq_put(&ccp->eventq, &ccp->callout_postprocess.c_ev);
         //os_eventq_put(os_eventq_dflt_get(), &ccp->callout_postprocess.c_ev);
+#endif
     
 #if MYNEWT_VAL(FS_XTALT_AUTOTUNE_ENABLED) 
     if (ccp->config.fs_xtalt_autotune && ccp->status.valid){
@@ -639,7 +655,10 @@ rx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
         }
     }
 #endif      
-    os_sem_release(&inst->ccp->sem);
+   // os_sem_release(&inst->ccp->sem);
+    dw1000_set_rx_timeout(inst, 0);
+    dw1000_start_rx(inst);
+    printf("rx-cb\n");
     return false;
 }
 
@@ -664,13 +683,18 @@ ccp_tx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t 
     if (inst->ccp->config.role != CCP_ROLE_MASTER)
         return false;
 
-    dw1000_ccp_instance_t * ccp = inst->ccp; 
+    dw1000_ccp_instance_t * ccp = inst->ccp;
+    hal_gpio_toggle(LED_3);
+    printf("tx-cb\n");
     ccp_frame_t * frame = ccp->frames[(++ccp->idx)%ccp->nframes];
     
     ccp->os_epoch = os_cputime_get32();
     ccp->epoch = frame->transmission_timestamp = dw1000_read_txrawst(inst); 
     ccp->epoch_master = frame->transmission_timestamp;
     ccp->period = frame->transmission_interval;
+    uint64_t tx_time = frame->transmission_timestamp; 
+    memcpy(csTxtime,&tx_time,5);
+    ccp_tx = 1;
 
     if (ccp->status.timer_enabled){
 #if 1
@@ -821,6 +845,7 @@ dw1000_ccp_send(struct _dw1000_dev_instance_t * inst, dw1000_dev_modes_t mode)
     frame->transmission_timestamp += inst->tx_antenna_delay;
 
     frame->seq_num = previous_frame->seq_num + 1;
+    seq_number = previous_frame->seq_num + 1;
     frame->long_address = inst->ccp->uuid;
     frame->transmission_interval = inst->ccp->period;
 
