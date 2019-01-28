@@ -1,0 +1,19 @@
+
+syscfg.defs:
+    BLINK_ENABLED:
+        description: >
+            'Enable clock calibration'
+        value: 1
+        restrictions: BLINK_PERIOD
+    BLINK_VERBOSE:
+        description: 'Show debug output from postprocess'
+        value: 0
+    BLINK_PERIOD:
+        description: >
+            Clock Calibration Packets Period (dwt usec)
+        value: ((uint32_t)0x18000)
+    BLINK_NUM_RELAYING_ANCHORS:
+        description: >
+            If using relaying anchors, adjust ccp rxtimeout for this many
+            anchor slots. Set to 0
+        value: 8

@@ -1080,21 +1080,22 @@ dw1000_tasks_init(struct _dw1000_dev_instance_t * inst)
     if (!os_eventq_inited(&inst->eventq))
     {
         /* Use a dedicate event queue for timer and interrupt events */
-        os_eventq_init(&inst->eventq);
+        //os_eventq_init(&inst->eventq);
         /*
          * Create the task to process timer and interrupt events from the
          * my_timer_interrupt_eventq event queue.
          */
         inst->interrupt_ev.ev_cb = dw1000_interrupt_ev_cb;
         inst->interrupt_ev.ev_arg = (void *)inst;
-
+        (void)dw1000_interrupt_task;
+#if 0
         os_task_init(&inst->task_str, "dw1000_irq",
                      dw1000_interrupt_task,
                      (void *) inst,
                      inst->task_prio, OS_WAIT_FOREVER,
                      inst->task_stack,
                      DW1000_DEV_TASK_STACK_SZ);
-
+#endif
         hal_gpio_irq_init(inst->irq_pin, dw1000_irq, inst, HAL_GPIO_TRIG_RISING, HAL_GPIO_PULL_UP);
         hal_gpio_irq_enable(inst->irq_pin);
     }    

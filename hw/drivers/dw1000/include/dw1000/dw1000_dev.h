@@ -89,7 +89,8 @@ typedef enum _dw1000_extension_id_t{
     DW1000_LWIP,
     DW1000_PAN,                              //!< Personal area network
     DW1000_PROVISION,                        //!< Provisioning
-    DW1000_CIR,                              //!< Channel impulse response 
+    DW1000_CIR,                              //!< Channel impulse response
+    DW1000_BLINK,                            //!< Blink
     DW1000_APP0 = 1024, 
     DW1000_APP1, 
     DW1000_APP2
@@ -334,6 +335,10 @@ typedef struct _dw1000_dev_instance_t{
 #if MYNEWT_VAL(CIR_ENABLED)
     struct _cir_instance_t * cir;                  //!< CIR instance
 #endif
+#if MYNEWT_VAL(BLINK_ENABLED)
+    struct _dw1000_blink_instance_t * blink;       //!< DW1000 blink instance
+#endif
+
     dw1000_dev_rxdiag_t rxdiag;                    //!< DW1000 receive diagnostics
     dw1000_dev_config_t config;                    //!< DW1000 device configurations  
     dw1000_dev_control_t control;                  //!< DW1000 device control parameters      
