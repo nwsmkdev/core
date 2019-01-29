@@ -304,7 +304,7 @@ hal_dw1000_read(struct _dw1000_dev_instance_t * inst,
     os_error_t err;
     assert(inst->spi_sem);
     err = os_sem_pend(inst->spi_sem, OS_TIMEOUT_NEVER);
-    //assert(err == OS_OK);
+    assert(err == OS_OK);
     uint8_t rx_buff[cmd_size + 1];
     hal_gpio_write(inst->ss_pin, 0);
 
@@ -429,7 +429,7 @@ hal_dw1000_write(struct _dw1000_dev_instance_t * inst, const uint8_t * cmd, uint
     os_error_t err;
     assert(inst->spi_sem);
     err = os_sem_pend(inst->spi_sem, OS_TIMEOUT_NEVER);
-//    assert(err == OS_OK);
+    assert(err == OS_OK);
     uint8_t rx_buff[length + 1];
 
     hal_gpio_write(inst->ss_pin, 0);
@@ -461,7 +461,7 @@ hal_dw1000_write_noblock(struct _dw1000_dev_instance_t * inst, const uint8_t * c
     assert(length);
     assert(inst->spi_sem);
     err = os_sem_pend(inst->spi_sem, OS_TIMEOUT_NEVER);
-    //assert(err == OS_OK);
+    assert(err == OS_OK);
     uint8_t rx_buff[cmd_size + 1];
     hal_gpio_write(inst->ss_pin, 0);
     hal_spi_txrx(inst->spi_num, (void*)cmd, (void *)rx_buff, cmd_size);
