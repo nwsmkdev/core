@@ -11,7 +11,7 @@ syscfg.defs:
     BLINK_PERIOD:
         description: >
             Clock Calibration Packets Period (dwt usec)
-        value: ((uint32_t)0x18000)
+        value: ((uint32_t)0x180000)
     BLINK_NUM_RELAYING_ANCHORS:
         description: >
             If using relaying anchors, adjust ccp rxtimeout for this many
