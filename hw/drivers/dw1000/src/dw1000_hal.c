@@ -406,7 +406,7 @@ hal_dw1000_read_noblock(struct _dw1000_dev_instance_t * inst, const uint8_t * cm
 
     /* Reaquire semaphore after rx complete */
     err = os_sem_pend(inst->spi_sem, OS_TIMEOUT_NEVER);
-    //assert(err == OS_OK);
+    assert(err == OS_OK);
 
     err = os_sem_release(inst->spi_sem);
     assert(err == OS_OK);

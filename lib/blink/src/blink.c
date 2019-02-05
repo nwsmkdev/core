@@ -72,7 +72,7 @@ blink_timer_init(struct _dw1000_dev_instance_t * inst, dw1000_blink_role_t role)
 
     if (role == BLINK_ROLE_MASTER)
         os_callout_init(&blink->event_cb, os_eventq_dflt_get(), blink_master_timer_ev_cb, (void *) inst);
-    os_callout_reset(&blink->event_cb, OS_TICKS_PER_SEC);
+    os_callout_reset(&blink->event_cb, OS_TICKS_PER_SEC/MYNEWT_VAL(BLINK_RATE));
 }
 
 dw1000_blink_instance_t *
@@ -105,7 +105,6 @@ dw1000_blink_init(struct _dw1000_dev_instance_t * inst, uint16_t nframes, uint64
     }else{
         assert(inst->blink->nframes == nframes);
     }
-    inst->blink->period = MYNEWT_VAL(BLINK_PERIOD);
     inst->blink->config = (dw1000_blink_config_t){
         .postprocess = false,
         .tx_holdoff_dly = 0x300,
@@ -267,15 +266,9 @@ blink_tx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_
     dw1000_blink_instance_t * blink = inst->blink;
     hal_gpio_toggle(LED_3);
     printf("blink-tx-cb\n");
-    blink_frame_t * frame = blink->frames[(++blink->idx)%blink->nframes];
-
-    blink->os_epoch = os_cputime_get32();
-    blink->epoch = frame->transmission_timestamp = dw1000_read_txrawst(inst);
-    blink->epoch_master = frame->transmission_timestamp;
-    blink->period = frame->transmission_interval;
 
     if (blink->status.timer_enabled){
-    os_callout_reset(&blink->event_cb, OS_TICKS_PER_SEC);
+        os_callout_reset(&blink->event_cb, OS_TICKS_PER_SEC/MYNEWT_VAL(BLINK_RATE));
     }
     return false;
 }
@@ -396,7 +389,6 @@ dw1000_blink_send(struct _dw1000_dev_instance_t * inst, dw1000_dev_modes_t mode)
 
     frame->seq_num = previous_frame->seq_num + 1;
     frame->long_address = inst->my_long_address;
-    frame->transmission_interval = inst->blink->period;
 
     dw1000_write_tx(inst, frame->array, 0, sizeof(blink_blink_frame_t));
     dw1000_write_tx_fctrl(inst, sizeof(blink_blink_frame_t), 0, true);
@@ -462,6 +454,6 @@ blink_master_timer_ev_cb(struct os_event *ev) {
     os_sem_release(&blink->sem);
     if (dw1000_blink_send(inst, DWT_BLOCKING).start_tx_error){
         printf("blink-tx-error\n");
-        os_callout_reset(&blink->event_cb, OS_TICKS_PER_SEC);
+        os_callout_reset(&blink->event_cb, OS_TICKS_PER_SEC/MYNEWT_VAL(BLINK_RATE));
     }
 }

@@ -4,14 +4,14 @@ syscfg.defs:
         description: >
             'Enable clock calibration'
         value: 1
-        restrictions: BLINK_PERIOD
+        restrictions: BLINK_RATE
     BLINK_VERBOSE:
         description: 'Show debug output from postprocess'
         value: 0
-    BLINK_PERIOD:
+    BLINK_RATE:
         description: >
-            Clock Calibration Packets Period (dwt usec)
-        value: ((uint32_t)0x180000)
+            This is factor divides the OS_TICKS_PER_SEC,decides the BLINKING PERIOD
+        value: ((uint32_t)20)
     BLINK_NUM_RELAYING_ANCHORS:
         description: >
             If using relaying anchors, adjust ccp rxtimeout for this many

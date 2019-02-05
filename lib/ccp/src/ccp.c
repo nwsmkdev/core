@@ -856,7 +856,7 @@ dw1000_ccp_send(struct _dw1000_dev_instance_t * inst, dw1000_dev_modes_t mode)
     dw1000_set_rx_timeout(inst, 0);
     ccp->status.start_tx_error = dw1000_start_tx(inst).start_tx_error;
     if (ccp->status.start_tx_error ){
-        //printf("tx-error\n");
+        printf("tx-error\n");
         previous_frame->seq_num = previous_frame->seq_num - 1;
         frame->seq_num = frame->seq_num - 1;
         STATS_INC(inst->ccp->stat, tx_start_error);

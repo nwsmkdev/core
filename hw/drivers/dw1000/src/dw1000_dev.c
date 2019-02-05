@@ -80,8 +80,11 @@ dw1000_read(dw1000_dev_instance_t * inst, uint16_t reg, uint16_t subaddress, uin
     if (length < 8) {
         hal_dw1000_read(inst, header, len, buffer, length);
     } else {
+#if MYNEWT_VAL(NRF52)
         hal_dw1000_read_noblock(inst, header, len, buffer, length);
-        //hal_dw1000_read(inst, header, len, buffer, length);
+#else
+        hal_dw1000_read(inst, header, len, buffer, length);
+#endif
     }
 
     return inst->status;
@@ -123,8 +126,11 @@ dw1000_write(dw1000_dev_instance_t * inst, uint16_t reg, uint16_t subaddress, ui
     if (len+length < 4) {
         hal_dw1000_write(inst, header, len, buffer, length);
     } else {
+#if MYNEWT_VAL(NRF52)
         hal_dw1000_write_noblock(inst, header, len, buffer, length);
-        //hal_dw1000_write(inst, header, len, buffer, length);
+#else
+        hal_dw1000_write(inst, header, len, buffer, length);
+#endif
     }
     return inst->status;
 }
