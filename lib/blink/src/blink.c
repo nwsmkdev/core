@@ -234,7 +234,7 @@ rx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
 
     blink->idx++; // confirmed frame advance
 
-    memcpy(blink_time, &frame->reception_timestamp, 5);
+    memcpy(blink_time, &inst->rxtimestamp, 5);
     blink_seq_number = frame->seq_num;
     blink_firstPath = dw1000_read_reg(inst, RX_TIME_ID, RX_TIME_FP_INDEX_OFFSET, 2);
     tag_address = frame->long_address;
@@ -384,10 +384,10 @@ dw1000_blink_send(struct _dw1000_dev_instance_t * inst, dw1000_dev_modes_t mode)
     os_error_t err = os_sem_pend(&blink->sem, OS_TIMEOUT_NEVER);
     assert(err == OS_OK);
     hal_gpio_toggle(LED_3);
-    blink_frame_t * previous_frame = blink->frames[(uint16_t)(blink->idx)%blink->nframes];
     blink_frame_t * frame = blink->frames[(blink->idx+1)%blink->nframes];
 
-    frame->seq_num = previous_frame->seq_num + 1;
+    frame->seq_num = frame->seq_num + 1;
+    printf("blink-seq == %d\n",frame->seq_num);
     frame->long_address = inst->my_long_address;
 
     dw1000_write_tx(inst, frame->array, 0, sizeof(blink_blink_frame_t));
