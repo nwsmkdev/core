@@ -111,11 +111,16 @@ typedef struct _dw1000_pan_control_t{
 typedef struct _dw1000_pan_instance_t{
     struct _dw1000_dev_instance_t * dev_inst;    //!< pointer to _dw1000_dev_instance_t
     dw1000_mac_interface_t cbs;                  //!< MAC Layer Callbacks
-    struct os_sem sem;                           //!< Structure containing os semaphores
+    struct dpl_sem sem;                          //!< Structure containing os semaphores
     dw1000_pan_status_t status;                  //!< DW1000 pan status parameters
     dw1000_pan_control_t control;                //!< DW1000 pan control parameters
+<<<<<<< HEAD
     struct os_event postprocess_event;           //!< Structure of postprocess event
     struct os_callout pan_lease_callout_expiry;  //!< Structure of lease_callout_expiry
+=======
+    struct dpl_callout pan_callout_postprocess;   //!< Structure of pan_callout_postprocess
+    struct dpl_callout pan_lease_callout_expiry;  //!< Structure of lease_callout_expiry
+>>>>>>> Migrated pan service from os_ to dpl_. Added dpl_event_get_arg to dereference os_struct
     dw1000_pan_config_t * config;                //!< DW1000 pan config parameters
     uint16_t nframes;                            //!< Number of buffers defined to store the data
     uint16_t idx;                                //!< Indicates number of DW1000 instances
@@ -124,7 +129,7 @@ typedef struct _dw1000_pan_instance_t{
 
 dw1000_pan_instance_t * dw1000_pan_init(dw1000_dev_instance_t * inst,  dw1000_pan_config_t * config, uint16_t nframes);
 void dw1000_pan_free(dw1000_pan_instance_t *pan);
-void dw1000_pan_set_postprocess(dw1000_pan_instance_t *pan, os_event_fn * postprocess);
+void dw1000_pan_set_postprocess(dw1000_pan_instance_t *pan, dpl_event_fn * postprocess);
 void dw1000_pan_start(dw1000_pan_instance_t * pan, dw1000_pan_role_t role);
 dw1000_dev_status_t dw1000_pan_listen(dw1000_pan_instance_t * pan, dw1000_dev_modes_t mode);
 dw1000_pan_status_t dw1000_pan_blink(dw1000_pan_instance_t * pan, uint16_t role, dw1000_dev_modes_t mode, uint64_t delay);
