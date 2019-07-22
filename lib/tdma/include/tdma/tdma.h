@@ -67,11 +67,7 @@ typedef struct _tdma_status_t{
 typedef struct _tdma_slot_t{
     struct _tdma_instance_t * parent;  //!< Pointer to _tdma_instance_ti
     struct hal_timer timer;            //!< Timer
-<<<<<<< HEAD
     struct os_event event;             //!< Sturcture of event
-=======
-    struct dpl_callout event_cb;        //!< Sturcture of event_cb
->>>>>>> Migrated from OS_ to DPL_. Added dpl_event_get_arg to dereference os_struct
     uint16_t idx;                      //!< Slot number
     void * arg;                        //!< Optional argument
 }tdma_slot_t; 

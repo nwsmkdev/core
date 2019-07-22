@@ -168,11 +168,7 @@ ccp_timer_irq(void * arg){
     assert(arg);
 
     dw1000_ccp_instance_t *ccp = (dw1000_ccp_instance_t*)arg;
-<<<<<<< HEAD
     os_eventq_put(&ccp->eventq, &ccp->timer_event);
-=======
-    dpl_eventq_put(&ccp->eventq, &ccp->event_cb.c_ev);
->>>>>>> os_ to dpl_ migration
 }
 
 /**

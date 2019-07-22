@@ -292,19 +292,10 @@ dw1000_pan_free(dw1000_pan_instance_t *pan){
  * @return void
  */
 void
-<<<<<<< HEAD
 dw1000_pan_set_postprocess(dw1000_pan_instance_t *pan, os_event_fn * cb)
 {
     pan->postprocess_event.ev_cb  = cb;
     pan->postprocess_event.ev_arg = (void *) pan;
-=======
-dw1000_pan_set_postprocess(dw1000_pan_instance_t *pan, dpl_event_fn * pan_postprocess){
-    dpl_callout_init(&pan->pan_callout_postprocess, dpl_eventq_dflt_get(),
-                    pan_postprocess, (void *) pan);
-    dpl_callout_init(&pan->pan_lease_callout_expiry, dpl_eventq_dflt_get(),
-                    lease_expiry_cb, (void *) pan);
-
->>>>>>> Migrated pan service from os_ to dpl_. Added dpl_event_get_arg to dereference os_struct
     pan->control.postprocess = true;
 }
 
@@ -374,14 +365,9 @@ lease_expiry_cb(struct dpl_event * ev)
     inst->slot_id = 0xffff;
 
     DIAGMSG("{\"utime\": %lu,\"msg\": \"pan_lease_expired\"}\n",os_cputime_ticks_to_usecs(os_cputime_get32()));
-<<<<<<< HEAD
     if (pan->control.postprocess) {
         os_eventq_put(&inst->eventq, &pan->postprocess_event);
     }
-=======
-    if (pan->control.postprocess)
-        dpl_eventq_put(&inst->eventq, &pan->pan_callout_postprocess.c_ev);
->>>>>>> Migrated pan service from os_ to dpl_. Added dpl_event_get_arg to dereference os_struct
 }
 
 /**
@@ -486,11 +472,7 @@ rx_complete_cb(dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cbs)
 
     /* Postprocess, all roles */
     if (pan->control.postprocess) {
-<<<<<<< HEAD
         os_eventq_put(&inst->eventq, &pan->postprocess_event);
-=======
-        dpl_eventq_put(&inst->eventq, &pan->pan_callout_postprocess.c_ev);
->>>>>>> Migrated pan service from os_ to dpl_. Added dpl_event_get_arg to dereference os_struct
     }
 
     /* Release sem */

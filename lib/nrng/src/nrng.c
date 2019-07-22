@@ -557,16 +557,10 @@ complete_cb(dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cbs)
     if (inst->fctrl != FCNTL_IEEE_RANGE_16)
         return false;
     dw1000_nrng_instance_t * nrng = (dw1000_nrng_instance_t *)cbs->inst_ptr;
-<<<<<<< HEAD
     if(os_sem_get_count(&nrng->sem) == 0){
         nrng_event.ev_cb  = complete_ev_cb;
         nrng_event.ev_arg = (void*) nrng;
         os_eventq_put(os_eventq_dflt_get(), &nrng_event);
-=======
-    if(dpl_sem_get_count(&nrng->sem) == 0){
-        os_callout_init(&nrng_callout, os_eventq_dflt_get(), complete_ev_cb, nrng);
-        os_eventq_put(os_eventq_dflt_get(), &nrng_callout.c_ev);
->>>>>>> Migrated nrng service from os_ to dpl_. Added dpl_event_get_arg to dereference os_struct
     }
     return false;
 }
