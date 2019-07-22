@@ -145,14 +145,11 @@ ccp_timer_init(dw1000_ccp_instance_t *ccp, dw1000_ccp_role_t role)
 
     os_cputime_timer_init(&ccp->timer, ccp_timer_irq, (void *) ccp);
 
-    if (role == CCP_ROLE_MASTER) {
-        ccp->timer_event.ev_cb = ccp_master_timer_ev_cb;
-        ccp->timer_event.ev_arg = (void *) ccp;
-    } else {
-        ccp->timer_event.ev_cb = ccp_slave_timer_ev_cb;
-        ccp->timer_event.ev_arg = (void *) ccp;
-    }
-
+    if (role == CCP_ROLE_MASTER) 
+        dpl_event_init(&ccp->timer_event, ccp_master_timer_ev_cb, (void *) ccp);
+    else 
+        dpl_event_init(&ccp->timer_event, ccp_slave_timer_ev_cb, (void *) ccp);
+    
     os_cputime_timer_relative(&ccp->timer, 0);
 }
 
@@ -168,7 +165,7 @@ ccp_timer_irq(void * arg){
     assert(arg);
 
     dw1000_ccp_instance_t *ccp = (dw1000_ccp_instance_t*)arg;
-    os_eventq_put(&ccp->eventq, &ccp->timer_event);
+    dpl_eventq_put(&ccp->eventq, &ccp->timer_event);
 }
 
 /**
@@ -297,7 +294,7 @@ ccp_tasks_init(struct _dw1000_ccp_instance_t * inst)
     if (!dpl_eventq_inited(&inst->eventq))
     {
         /* Use a dedicate event queue for tdma events */
-        os_eventq_init(&inst->eventq);
+        dpl_eventq_init(&inst->eventq);
         os_task_init(&inst->task_str, "dw1000_ccp",
                      ccp_task,
                      (void *) inst,
@@ -381,7 +378,7 @@ dw1000_ccp_init(struct _dw1000_dev_instance_t * inst, uint16_t nframes){
     assert(err == DPL_OK);
 
 #if MYNEWT_VAL(WCS_ENABLED)
-    ccp->wcs = wcs_init(NULL, ccp);                 // Using wcs process
+    ccp->wcs = wcs_init(NULL, ccp);                       // Using wcs process
     dw1000_ccp_set_postprocess(ccp, &wcs_update_cb);      // Using default process
 #else
     dw1000_ccp_set_postprocess(ccp, &ccp_postprocess);    // Using default process
@@ -488,10 +485,9 @@ void ccp_pkg_init(void){
  * @return void
  */
 void
-dw1000_ccp_set_postprocess(dw1000_ccp_instance_t * ccp, os_event_fn * postprocess)
+dw1000_ccp_set_postprocess(dw1000_ccp_instance_t * ccp, dpl_event_fn * postprocess)
 {
-    ccp->postprocess_event.ev_cb = postprocess;
-    ccp->postprocess_event.ev_arg = (void *) ccp;
+    dpl_event_init(&ccp->postprocess_event, postprocess, (void *) ccp);
     ccp->config.postprocess = true;
 }
 
@@ -683,7 +679,7 @@ rx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
     }
 
     if (ccp->config.postprocess && ccp->status.valid) {
-        os_eventq_put(os_eventq_dflt_get(), &ccp->postprocess_event);
+        dpl_eventq_put(dpl_eventq_dflt_get(), &ccp->postprocess_event);
     }
 
 #if MYNEWT_VAL(FS_XTALT_AUTOTUNE_ENABLED)
@@ -748,7 +744,7 @@ ccp_tx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t 
     ccp->status.valid |= ccp->idx > 1;
     // Postprocess for tx_complete is used to generate tdma events on the clock master node.
     if (ccp->config.postprocess && ccp->status.valid)
-        os_eventq_put(os_eventq_dflt_get(), &ccp->postprocess_event);
+        dpl_eventq_put(dpl_eventq_dflt_get(), &ccp->postprocess_event);
 
     if(dpl_sem_get_count(&ccp->sem) == 0){
         dpl_error_t err = dpl_sem_release(&ccp->sem);
