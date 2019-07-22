@@ -143,16 +143,8 @@ tdma_init(struct _dw1000_dev_instance_t * inst, uint16_t nslots)
     assert(rc == 0);
 #endif
 
-<<<<<<< HEAD
     tdma->superframe_event.ev_cb  = tdma_superframe_event_cb;
     tdma->superframe_event.ev_arg = (void *) tdma;
-=======
-#ifdef TDMA_TASKS_ENABLE
-    dpl_callout_init(&tdma->event_co, &tdma->eventq, tdma_superframe_event_cb, (void *) tdma);
-#else
-    dpl_callout_init(&tdma->event_co, &inst->eventq, tdma_superframe_event_cb, (void *) tdma);
-#endif
->>>>>>> Migrated from OS_ to DPL_. Added dpl_event_get_arg to dereference os_struct
 
     tdma->status.initialized = true;
     tdma->os_epoch = os_cputime_get32();
