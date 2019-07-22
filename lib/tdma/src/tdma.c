@@ -143,10 +143,9 @@ tdma_init(struct _dw1000_dev_instance_t * inst, uint16_t nslots)
     assert(rc == 0);
 #endif
 
-    tdma->superframe_event.ev_cb  = tdma_superframe_event_cb;
-    tdma->superframe_event.ev_arg = (void *) tdma;
-
+    dpl_event_init(&tdma->superframe_event, tdma_superframe_event_cb, (void *) tdma);
     tdma->status.initialized = true;
+
     tdma->os_epoch = os_cputime_get32();
 
 #ifdef TDMA_TASKS_ENABLE
@@ -289,15 +288,9 @@ rx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
         if (tdma != NULL && tdma->status.initialized){
             tdma->os_epoch = ccp->os_epoch;
 #ifdef TDMA_TASKS_ENABLE
-<<<<<<< HEAD
-            os_eventq_put(&tdma->eventq, &tdma->superframe_event);
+            dpl_eventq_put(&tdma->eventq, &tdma->superframe_event);
 #else
-            os_eventq_put(&inst->eventq, &tdma->superframe_event);
-=======
-            dpl_eventq_put(&tdma->eventq, &tdma->event_cb.c_ev);
-#else
-            dpl_eventq_put(&inst->eventq, &tdma->event_cb.c_ev);
->>>>>>> Migrated from OS_ to DPL_. Added dpl_event_get_arg to dereference os_struct
+            dpl_eventq_put(&inst->eventq, &tdma->superframe_event);
 #endif
         }
         return false; // TDMA is an observer and should not return true
@@ -326,15 +319,9 @@ tx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
         if (tdma != NULL && tdma->status.initialized){
             tdma->os_epoch = ccp->os_epoch;
 #ifdef TDMA_TASKS_ENABLE
-<<<<<<< HEAD
-            os_eventq_put(&tdma->eventq, &tdma->superframe_event);
+            dpl_eventq_put(&tdma->eventq, &tdma->superframe_event);
 #else
-            os_eventq_put(&inst->eventq, &tdma->superframe_event);
-=======
-            dpl_eventq_put(&tdma->eventq, &tdma->event_cb.c_ev);
-#else
-            dpl_eventq_put(&inst->eventq, &tdma->event_cb.c_ev);
->>>>>>> Migrated from OS_ to DPL_. Added dpl_event_get_arg to dereference os_struct
+            dpl_eventq_put(&inst->eventq, &tdma->superframe_event);
 #endif
         }
         return false;   // TDMA is an observer and should not return true
@@ -354,11 +341,7 @@ tx_complete_cb(struct _dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cb
  * @return void
  */
 void
-<<<<<<< HEAD
-tdma_assign_slot(struct _tdma_instance_t * inst, void (* call_back )(struct os_event *), uint16_t idx, void * arg)
-=======
-tdma_assign_slot(struct _tdma_instance_t * inst, void (* callout )(struct dpl_event *), uint16_t idx, void * arg)
->>>>>>> Migrated from OS_ to DPL_. Added dpl_event_get_arg to dereference os_struct
+tdma_assign_slot(struct _tdma_instance_t * inst, void (* call_back )(struct dpl_event *), uint16_t idx, void * arg)
 {
     assert(idx < inst->nslots);
 
@@ -372,21 +355,13 @@ tdma_assign_slot(struct _tdma_instance_t * inst, void (* callout )(struct dpl_ev
     }else{
         memset(inst->slot[idx], 0, sizeof(struct _tdma_slot_t));
     }
+
     inst->slot[idx]->idx = idx;
     inst->slot[idx]->parent = inst;
     inst->slot[idx]->arg = arg;
-    inst->slot[idx]->event.ev_cb  = call_back;
-    inst->slot[idx]->event.ev_arg = (void *) inst->slot[idx];
 
+    dpl_event_init(&inst->slot[idx]->event, call_back, (void *) inst->slot[idx]);
     os_cputime_timer_init(&inst->slot[idx]->timer, slot_timer_cb, (void *) inst->slot[idx]);
-<<<<<<< HEAD
-=======
-#ifdef TDMA_TASKS_ENABLE
-    dpl_callout_init(&inst->slot[idx]->event_cb, &inst->eventq, callout, (void *) inst->slot[idx]);
-#else
-    dpl_callout_init(&inst->slot[idx]->event_cb, &inst->parent->eventq, callout, (void *) inst->slot[idx]);
-#endif
->>>>>>> Migrated from OS_ to DPL_. Added dpl_event_get_arg to dereference os_struct
 }
 
 /**
@@ -474,15 +449,9 @@ slot_timer_cb(void * arg)
     TDMA_STATS_INC(slot_timer_cnt);
 
 #ifdef TDMA_TASKS_ENABLE
-<<<<<<< HEAD
-    os_eventq_put(&tdma->eventq, &slot->event);
+    dpl_eventq_put(&tdma->eventq, &slot->event);
 #else
-    os_eventq_put(&tdma->dev_inst->eventq, &slot->event);
-=======
-    dpl_eventq_put(&tdma->eventq, &slot->event_cb.c_ev);
-#else
-    dpl_eventq_put(&tdma->dev_inst->eventq, &slot->event_cb.c_ev);
->>>>>>> Migrated from OS_ to DPL_. Added dpl_event_get_arg to dereference os_struct
+    dpl_eventq_put(&tdma->dev_inst->eventq, &slot->event);
 #endif
 }
 

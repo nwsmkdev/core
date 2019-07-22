@@ -67,7 +67,7 @@ typedef struct _tdma_status_t{
 typedef struct _tdma_slot_t{
     struct _tdma_instance_t * parent;  //!< Pointer to _tdma_instance_ti
     struct hal_timer timer;            //!< Timer
-    struct os_event event;             //!< Sturcture of event
+    struct dpl_event event;             //!< Sturcture of event
     uint16_t idx;                      //!< Slot number
     void * arg;                        //!< Optional argument
 }tdma_slot_t; 
@@ -87,11 +87,7 @@ typedef struct _tdma_instance_t{
     uint16_t idx;                            //!< Slot number
     uint16_t nslots;                         //!< Number of slots 
     uint32_t os_epoch;                       //!< Epoch timestamp
-<<<<<<< HEAD
-    struct os_event superframe_event;        //!< Structure of superframe_event
-=======
-    struct dpl_callout event_cb;             //!< Structure of event_cb
->>>>>>> Migrated from OS_ to DPL_. Added dpl_event_get_arg to dereference os_struct
+    struct dpl_event superframe_event;        //!< Structure of superframe_event
 #ifdef TDMA_TASKS_ENABLE
     struct dpl_eventq eventq;                //!< Structure of os events
     struct os_task task_str;                 //!< Structure of os tasks
@@ -107,11 +103,7 @@ typedef struct _tdma_instance_t{
 
 struct _tdma_instance_t * tdma_init(struct _dw1000_dev_instance_t * inst, uint16_t nslots);
 void tdma_free(struct _tdma_instance_t * inst);
-<<<<<<< HEAD
-void tdma_assign_slot(struct _tdma_instance_t * inst, void (* call_back )(struct os_event *), uint16_t idx, void * arg);
-=======
-void tdma_assign_slot(struct _tdma_instance_t * inst, void (* callout )(struct dpl_event *), uint16_t idx, void * arg);
->>>>>>> Migrated from OS_ to DPL_. Added dpl_event_get_arg to dereference os_struct
+void tdma_assign_slot(struct _tdma_instance_t * inst, void (* call_back )(struct dpl_event *), uint16_t idx, void * arg);
 void tdma_release_slot(struct _tdma_instance_t * inst, uint16_t idx);
 void tdma_stop(struct _tdma_instance_t * tdma);
 
