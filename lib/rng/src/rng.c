@@ -923,10 +923,10 @@ tx_complete_cb(dw1000_dev_instance_t * inst, dw1000_mac_interface_t * cbs){
  * @return true on sucess
  */
 static void
-complete_ev_cb(struct os_event *ev) {
+complete_ev_cb(struct dpl_event *ev) {
     assert(ev != NULL);
     assert(dpl_event_get_arg(ev));
-    
+
     dw1000_rng_instance_t * rng = (dw1000_rng_instance_t *)dpl_event_get_arg(ev);
     rng_encode(inst->rng);
 }
