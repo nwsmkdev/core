@@ -78,7 +78,7 @@ STATS_NAME_END(mac_stat_section)
 
 int dw1000_cli_register(void);
 static void dw1000_interrupt_task(void *arg);
-static void dw1000_interrupt_ev_cb(struct os_event *ev);
+static void dw1000_interrupt_ev_cb(struct dpl_event *ev);
 static void dw1000_irq(void *arg);
 
 //#define DIAGMSG(s,u) printf(s,u)
@@ -1163,11 +1163,10 @@ dw1000_tasks_init(struct _dw1000_dev_instance_t * inst)
          * Create the task to process timer and interrupt events from the
          * my_timer_interrupt_eventq event queue.
          */
-        inst->interrupt_ev.ev.ev_cb = dw1000_interrupt_ev_cb;
-        inst->interrupt_ev.ev.ev_arg = (void *)inst;
 
+        dpl_event_init(&inst->interrupt_ev, dw1000_interrupt_ev_cb, (void *)inst);
         dpl_task_init(&inst->task_str, "dw1000_irq",
-                     dw1000_interrupt_task,
+                     &dw1000_interrupt_task,
                      (void *) inst,
                      inst->task_prio, DPL_WAIT_FOREVER,
                      inst->task_stack,
@@ -1297,9 +1296,9 @@ dw1000_mac_get_interface(dw1000_dev_instance_t * inst, dw1000_extension_id_t id)
  * 
  */
 static void 
-dw1000_interrupt_ev_cb(struct os_event *ev)
+dw1000_interrupt_ev_cb(struct dpl_event *ev)
 {
-    dw1000_dev_instance_t * inst = ev->ev_arg;
+    dw1000_dev_instance_t * inst = dpl_event_get_arg(ev);
 
     inst->sys_status = dw1000_read_reg(inst, SYS_STATUS_ID, 0, sizeof(uint32_t)); // Read status register low 32bits
     //printf("inst->sys_status= %lX\n",inst->sys_status);
