@@ -40,7 +40,7 @@ target_link_libraries(
 # Install library
 install(
     TARGETS ${PROJECT_NAME} ARCHIVE 
-    DESTINATION lib/${PROJECT_NAME}
+    DESTINATION lib
 )
 install(
     FILES 
