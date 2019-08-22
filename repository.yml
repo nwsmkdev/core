@@ -17,7 +17,7 @@
 # under the License.
 #
 
-repo.name: mynewt-dw1000-core
+repo.name: core
 repo.versions:
     "1.0.0": "master"
     "1.0.0": "master"
